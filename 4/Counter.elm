@@ -1,9 +1,9 @@
-module Counter (Model, init, Action, update, view, viewWithRemoveButton, Context) where
+module Counter (Model, init, Action, view, viewWithRemoveButton, Context) where
 
 import Html (..)
 import Html.Attributes (..)
 import Html.Events (..)
-import LocalChannel (..)
+import Signal
 
 
 -- MODEL
@@ -16,41 +16,40 @@ init count = count
 
 -- UPDATE
 
-type Action = Increment | Decrement
+type alias Action = Model -> Model
 
+increment : Action
+increment model = model + 1
 
-update : Action -> Model -> Model
-update action model =
-  case action of
-    Increment -> model + 1
-    Decrement -> model - 1
+decrement : Action
+decrement model = model - 1
 
 
 -- VIEW
 
-view : LocalChannel Action -> Model -> Html
-view channel model =
+view : (Action -> Signal.Message) -> Model -> Html
+view send model =
   div []
-    [ button [ onClick (send channel Decrement) ] [ text "-" ]
+    [ button [ onClick (send decrement) ] [ text "-" ]
     , div [ countStyle ] [ text (toString model) ]
-    , button [ onClick (send channel Increment) ] [ text "+" ]
+    , button [ onClick (send increment) ] [ text "+" ]
     ]
 
 
 type alias Context =
-    { actionChan : LocalChannel Action
-    , removeChan : LocalChannel ()
+    { send : (Action -> Signal.Message)
+    , removeIt : Signal.Message
     }
 
 
 viewWithRemoveButton : Context -> Model -> Html
 viewWithRemoveButton context model =
   div []
-    [ button [ onClick (send context.actionChan Decrement) ] [ text "-" ]
+    [ button [ onClick (context.send decrement) ] [ text "-" ]
     , div [ countStyle ] [ text (toString model) ]
-    , button [ onClick (send context.actionChan Increment) ] [ text "+" ]
+    , button [ onClick (context.send increment) ] [ text "+" ]
     , div [ countStyle ] []
-    , button [ onClick (send context.removeChan ()) ] [ text "X" ]
+    , button [ onClick context.removeIt ] [ text "X" ]
     ]
 
 

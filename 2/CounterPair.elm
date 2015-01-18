@@ -4,9 +4,10 @@ import Counter
 import Html (..)
 import Html.Attributes (..)
 import Html.Events (..)
-import LocalChannel as LC
 import Signal
+import Controller
 
+controller = Controller.new (init 0 0)
 
 -- MODEL
 
@@ -25,26 +26,18 @@ init top bottom =
 
 -- UPDATE
 
-type Action
-    = Reset
-    | Top Counter.Action
-    | Bottom Counter.Action
+type alias Action = Model -> Model
 
+reset : Action
+reset model = init 0 0
 
-update : Action -> Model -> Model
-update action model =
-  case action of
-    Reset -> init 0 0
+updateTop : Counter.Action -> Action
+updateTop counterAction model = 
+  { model | topCounter <- (counterAction model.topCounter) }
 
-    Top act ->
-      { model |
-          topCounter <- Counter.update act model.topCounter
-      }
-
-    Bottom act ->
-      { model |
-          bottomCounter <- Counter.update act model.bottomCounter
-      }
+updateBottom : Counter.Action -> Action
+updateBottom counterAction model = 
+  { model | bottomCounter <- (counterAction model.bottomCounter) }
 
 
 -- VIEW
@@ -52,24 +45,13 @@ update action model =
 view : Model -> Html
 view model =
   div []
-    [ Counter.view (LC.create Top actionChannel) model.topCounter
-    , Counter.view (LC.create Bottom actionChannel) model.bottomCounter
-    , button [ onClick (Signal.send actionChannel Reset) ] [ text "RESET" ]
+    [ Counter.view (controller.childSend updateTop) model.topCounter
+    , Counter.view (controller.childSend updateBottom) model.bottomCounter
+    , button [ onClick (controller.send reset) ] [ text "RESET" ]
     ]
 
 
 -- SIGNALS
 
 main : Signal Html
-main =
-  Signal.map view model
-
-
-model : Signal Model
-model =
-  Signal.foldp update (init 0 0) (Signal.subscribe actionChannel)
-
-
-actionChannel : Signal.Channel Action
-actionChannel =
-  Signal.channel Reset
+main = controller.render view

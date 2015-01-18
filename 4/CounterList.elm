@@ -5,9 +5,10 @@ import Html (..)
 import Html.Attributes (..)
 import Html.Events (..)
 import List
-import LocalChannel as LC
 import Signal
+import Controller
 
+controller = Controller.new init
 
 -- MODEL
 
@@ -28,50 +29,46 @@ init =
 
 -- UPDATE
 
-type Action
-    = Insert
-    | Remove ID
-    | Modify ID Counter.Action
+type alias Action = Model -> Model
 
+insert : Action
+insert model = 
+  { model | 
+      counters <- ( model.nextID, Counter.init 0 ) :: model.counters,
+      nextID <- model.nextID + 1 
+  }
 
-update : Action -> Model -> Model
-update action model =
-  case action of
-    Insert ->
-      { model |
-          counters <- ( model.nextID, Counter.init 0 ) :: model.counters,
-          nextID <- model.nextID + 1
-      }
+remove : ID -> Action
+remove id model = 
+  { model |
+      counters <- List.filter (\(counterID, _) -> counterID /= id) model.counters
+  }
 
-    Remove id ->
-      { model |
-          counters <- List.filter (\(counterID, _) -> counterID /= id) model.counters
-      }
-
-    Modify id counterAction ->
-      let updateCounter (counterID, counterModel) =
-            if counterID == id
-                then (counterID, Counter.update counterAction counterModel)
-                else (counterID, counterModel)
-      in
-          { model | counters <- List.map updateCounter model.counters }
+modify : ID -> Counter.Action -> Action
+modify id childAction model = 
+  let updateCounter (counterID, counterModel) =
+        if counterID == id
+            then (counterID, childAction counterModel)
+            else (counterID, counterModel)
+  in
+      { model | counters <- List.map updateCounter model.counters }
 
 
 -- VIEW
 
 view : Model -> Html
 view model =
-  let insert = button [ onClick (Signal.send actionChannel Insert) ] [ text "Add" ]
+  let insertBtn = button [ onClick (controller.send insert) ] [ text "Add" ]
   in
-      div [] (insert :: List.map viewCounter model.counters)
+      div [] (insertBtn :: List.map viewCounter model.counters)
 
 
 viewCounter : (ID, Counter.Model) -> Html
 viewCounter (id, model) =
   let context =
         Counter.Context
-          (LC.create (Modify id) actionChannel)
-          (LC.create (always (Remove id)) actionChannel)
+          (controller.childSend (modify id))
+          (controller.send (remove id))
   in
       Counter.viewWithRemoveButton context model
 
@@ -79,15 +76,4 @@ viewCounter (id, model) =
 -- SIGNALS
 
 main : Signal Html
-main =
-  Signal.map view model
-
-
-model : Signal Model
-model =
-  Signal.foldp update init (Signal.subscribe actionChannel)
-
-
-actionChannel : Signal.Channel Action
-actionChannel =
-  Signal.channel Insert
+main = controller.render view

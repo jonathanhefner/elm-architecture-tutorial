@@ -4,6 +4,10 @@ import Html (..)
 import Html.Attributes (..)
 import Html.Events (..)
 import Signal
+import Controller
+
+
+controller = Controller.new 0
 
 
 -- MODEL
@@ -13,13 +17,11 @@ type alias Model = Int
 
 -- UPDATE
 
-type Action = Increment | Decrement
+increment : Model -> Model
+increment model = model + 1
 
-update : Action -> Model -> Model
-update action model =
-  case action of
-    Increment -> model + 1
-    Decrement -> model - 1
+decrement : Model -> Model
+decrement model = model - 1
 
 
 -- VIEW
@@ -27,9 +29,9 @@ update action model =
 view : Model -> Html
 view model =
   div []
-    [ button [ onClick (Signal.send actionChannel Decrement) ] [ text "-" ]
+    [ button [ onClick (controller.send decrement) ] [ text "-" ]
     , div [ countStyle ] [ text (toString model) ]
-    , button [ onClick (Signal.send actionChannel Increment) ] [ text "+" ]
+    , button [ onClick (controller.send increment) ] [ text "+" ]
     ]
 
 
@@ -47,13 +49,4 @@ countStyle =
 -- SIGNALS
 
 main : Signal Html
-main =
-  Signal.map view model
-
-model : Signal Model
-model =
-  Signal.foldp update 0 (Signal.subscribe actionChannel)
-
-actionChannel : Signal.Channel Action
-actionChannel =
-  Signal.channel Increment
+main = controller.render view

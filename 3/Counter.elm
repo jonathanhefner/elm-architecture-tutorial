@@ -1,9 +1,9 @@
-module Counter (Model, init, Action, update, view) where
+module Counter (Model, init, Action, view) where
 
 import Html (..)
 import Html.Attributes (..)
 import Html.Events (..)
-import LocalChannel (..)
+import Signal
 
 
 -- MODEL
@@ -17,24 +17,23 @@ init count = count
 
 -- UPDATE
 
-type Action = Increment | Decrement
+type alias Action = Model -> Model
 
+increment : Action
+increment model = model + 1
 
-update : Action -> Model -> Model
-update action model =
-  case action of
-    Increment -> model + 1
-    Decrement -> model - 1
+decrement : Action
+decrement model = model - 1
 
 
 -- VIEW
 
-view : LocalChannel Action -> Model -> Html
-view channel model =
+view : (Action -> Signal.Message) -> Model -> Html
+view send model =
   div []
-    [ button [ onClick (send channel Decrement) ] [ text "-" ]
+    [ button [ onClick (send decrement) ] [ text "-" ]
     , div [ countStyle ] [ text (toString model) ]
-    , button [ onClick (send channel Increment) ] [ text "+" ]
+    , button [ onClick (send increment) ] [ text "+" ]
     ]
 
 
