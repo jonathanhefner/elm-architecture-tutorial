@@ -7,6 +7,7 @@ import Html.Events (..)
 import List
 import Signal
 import Controller
+import Controller (..)
 
 controller = Controller.new init
 
@@ -29,19 +30,17 @@ init =
 
 -- UPDATE
 
-type alias Action = Model -> Model
-
-insert : Action
+insert : Action Model
 insert model = 
   let newCounter = ( model.nextID, Counter.init 0 )
       newCounters = model.counters ++ [ newCounter ]
   in
       { model | counters <- newCounters, nextID <- model.nextID + 1 }
 
-remove : Action
+remove : Action Model
 remove model = { model | counters <- List.drop 1 model.counters }
 
-modify : ID -> Counter.Action -> Action
+modify : ID -> Action Counter.Model -> Action Model
 modify id counterAction model = 
   let updateCounter (counterID, counterModel) =
         if counterID == id
@@ -53,18 +52,18 @@ modify id counterAction model =
 
 -- VIEW
 
-view : Model -> Html
+view : View Model
 view model =
   let counters = List.map viewCounter model.counters
-      removeBtn = button [ onClick (controller.send remove) ] [ text "Remove" ]
-      insertBtn = button [ onClick (controller.send insert) ] [ text "Add" ]
+      removeBtn = button [ onClick (controller.enact remove) ] [ text "Remove" ]
+      insertBtn = button [ onClick (controller.enact insert) ] [ text "Add" ]
   in
       div [] ([removeBtn, insertBtn] ++ counters)
 
 
-viewCounter : (ID, Counter.Model) -> Html
+viewCounter : View (ID, Counter.Model)
 viewCounter (id, model) =
-  Counter.view (controller.childSend (modify id)) model
+  Counter.view (controller.childEnact (modify id)) model
 
 
 -- SIGNALS

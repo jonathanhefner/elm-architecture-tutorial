@@ -1,9 +1,10 @@
-module Counter (Model, init, Action, view, viewWithRemoveButton, Context) where
+module Counter (Model, init, view, viewWithRemoveButton, Context) where
 
 import Html (..)
 import Html.Attributes (..)
 import Html.Events (..)
 import Signal
+import Controller (..)
 
 
 -- MODEL
@@ -16,28 +17,26 @@ init count = count
 
 -- UPDATE
 
-type alias Action = Model -> Model
-
-increment : Action
+increment : Action Model
 increment model = model + 1
 
-decrement : Action
+decrement : Action Model
 decrement model = model - 1
 
 
 -- VIEW
 
-view : (Action -> Signal.Message) -> Model -> Html
-view send model =
+view : Enact Model -> View Model
+view enact model =
   div []
-    [ button [ onClick (send decrement) ] [ text "-" ]
+    [ button [ onClick (enact decrement) ] [ text "-" ]
     , div [ countStyle ] [ text (toString model) ]
-    , button [ onClick (send increment) ] [ text "+" ]
+    , button [ onClick (enact increment) ] [ text "+" ]
     ]
 
 
 type alias Context =
-    { send : (Action -> Signal.Message)
+    { enact : Enact Model
     , removeIt : Signal.Message
     }
 
@@ -45,9 +44,9 @@ type alias Context =
 viewWithRemoveButton : Context -> Model -> Html
 viewWithRemoveButton context model =
   div []
-    [ button [ onClick (context.send decrement) ] [ text "-" ]
+    [ button [ onClick (context.enact decrement) ] [ text "-" ]
     , div [ countStyle ] [ text (toString model) ]
-    , button [ onClick (context.send increment) ] [ text "+" ]
+    , button [ onClick (context.enact increment) ] [ text "+" ]
     , div [ countStyle ] []
     , button [ onClick context.removeIt ] [ text "X" ]
     ]

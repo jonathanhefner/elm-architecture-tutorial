@@ -5,6 +5,7 @@ import Html.Attributes (..)
 import Html.Events (..)
 import Signal
 import Controller
+import Controller (..)
 
 
 controller = Controller.new 0
@@ -17,21 +18,21 @@ type alias Model = Int
 
 -- UPDATE
 
-increment : Model -> Model
+increment : Action Model
 increment model = model + 1
 
-decrement : Model -> Model
+decrement : Action Model
 decrement model = model - 1
 
 
 -- VIEW
 
-view : Model -> Html
+view : View Model
 view model =
   div []
-    [ button [ onClick (controller.send decrement) ] [ text "-" ]
+    [ button [ onClick (controller.enact decrement) ] [ text "-" ]
     , div [ countStyle ] [ text (toString model) ]
-    , button [ onClick (controller.send increment) ] [ text "+" ]
+    , button [ onClick (controller.enact increment) ] [ text "+" ]
     ]
 
 

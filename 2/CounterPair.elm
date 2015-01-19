@@ -6,6 +6,7 @@ import Html.Attributes (..)
 import Html.Events (..)
 import Signal
 import Controller
+import Controller (..)
 
 controller = Controller.new (init 0 0)
 
@@ -26,28 +27,26 @@ init top bottom =
 
 -- UPDATE
 
-type alias Action = Model -> Model
-
-reset : Action
+reset : Action Model
 reset model = init 0 0
 
-updateTop : Counter.Action -> Action
+updateTop : Action Counter.Model -> Action Model
 updateTop counterAction model = 
   { model | topCounter <- (counterAction model.topCounter) }
 
-updateBottom : Counter.Action -> Action
+updateBottom : Action Counter.Model -> Action Model
 updateBottom counterAction model = 
   { model | bottomCounter <- (counterAction model.bottomCounter) }
 
 
 -- VIEW
 
-view : Model -> Html
+view : View Model
 view model =
   div []
-    [ Counter.view (controller.childSend updateTop) model.topCounter
-    , Counter.view (controller.childSend updateBottom) model.bottomCounter
-    , button [ onClick (controller.send reset) ] [ text "RESET" ]
+    [ Counter.view (controller.childEnact updateTop) model.topCounter
+    , Counter.view (controller.childEnact updateBottom) model.bottomCounter
+    , button [ onClick (controller.enact reset) ] [ text "RESET" ]
     ]
 
 
