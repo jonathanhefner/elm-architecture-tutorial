@@ -4,11 +4,7 @@ import Html (..)
 import Html.Attributes (..)
 import Html.Events (..)
 import Signal
-import Controller
 import Controller (..)
-
-
-controller = Controller.new 0
 
 
 -- MODEL
@@ -28,11 +24,11 @@ decrement model = model - 1
 -- VIEW
 
 view : View Model
-view model =
+view enact model =
   div []
-    [ button [ onClick (controller.enact decrement) ] [ text "-" ]
+    [ button [ onClick (enact decrement) ] [ text "-" ]
     , div [ countStyle ] [ text (toString model) ]
-    , button [ onClick (controller.enact increment) ] [ text "+" ]
+    , button [ onClick (enact increment) ] [ text "+" ]
     ]
 
 
@@ -50,4 +46,4 @@ countStyle =
 -- SIGNALS
 
 main : Signal Html
-main = controller.render view
+main = render view 0

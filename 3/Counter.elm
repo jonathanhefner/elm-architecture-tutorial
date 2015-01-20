@@ -27,7 +27,7 @@ decrement model = model - 1
 
 -- VIEW
 
-view : Enact Model -> View Model
+view : View Model
 view enact model =
   div []
     [ button [ onClick (enact decrement) ] [ text "-" ]

@@ -5,10 +5,8 @@ import Html (..)
 import Html.Attributes (..)
 import Html.Events (..)
 import Signal
-import Controller
 import Controller (..)
 
-controller = Controller.new (init 0 0)
 
 -- MODEL
 
@@ -42,15 +40,15 @@ updateBottom counterAction model =
 -- VIEW
 
 view : View Model
-view model =
+view enact model =
   div []
-    [ Counter.view (controller.childEnact updateTop) model.topCounter
-    , Counter.view (controller.childEnact updateBottom) model.bottomCounter
-    , button [ onClick (controller.enact reset) ] [ text "RESET" ]
+    [ Counter.view (lensEnact updateTop enact) model.topCounter
+    , Counter.view (lensEnact updateBottom enact) model.bottomCounter
+    , button [ onClick (enact reset) ] [ text "RESET" ]
     ]
 
 
 -- SIGNALS
 
 main : Signal Html
-main = controller.render view
+main = render view (init 0 0)

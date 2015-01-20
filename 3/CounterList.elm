@@ -9,7 +9,6 @@ import Signal
 import Controller
 import Controller (..)
 
-controller = Controller.new init
 
 -- MODEL
 
@@ -53,20 +52,20 @@ modify id counterAction model =
 -- VIEW
 
 view : View Model
-view model =
-  let counters = List.map viewCounter model.counters
-      removeBtn = button [ onClick (controller.enact remove) ] [ text "Remove" ]
-      insertBtn = button [ onClick (controller.enact insert) ] [ text "Add" ]
+view enact model =
+  let counters = List.map (viewCounter enact) model.counters
+      removeBtn = button [ onClick (enact remove) ] [ text "Remove" ]
+      insertBtn = button [ onClick (enact insert) ] [ text "Add" ]
   in
       div [] ([removeBtn, insertBtn] ++ counters)
 
 
-viewCounter : View (ID, Counter.Model)
-viewCounter (id, model) =
-  Counter.view (controller.childEnact (modify id)) model
+viewCounter : Enact Model -> (ID, Counter.Model) -> Html
+viewCounter enact (id, model) =
+  Counter.view (lensEnact (modify id) enact) model
 
 
 -- SIGNALS
 
 main : Signal Html
-main = controller.render view
+main = render view init

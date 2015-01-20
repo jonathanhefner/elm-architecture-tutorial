@@ -26,7 +26,7 @@ decrement model = model - 1
 
 -- VIEW
 
-view : Enact Model -> View Model
+view : View Model
 view enact model =
   div []
     [ button [ onClick (enact decrement) ] [ text "-" ]
@@ -36,19 +36,18 @@ view enact model =
 
 
 type alias Context =
-    { enact : Enact Model
-    , removeIt : Signal.Message
+    { removeMe : Signal.Message
     }
 
 
-viewWithRemoveButton : Context -> Model -> Html
-viewWithRemoveButton context model =
+viewWithRemoveButton : Context -> View Model
+viewWithRemoveButton context enact model =
   div []
-    [ button [ onClick (context.enact decrement) ] [ text "-" ]
+    [ button [ onClick (enact decrement) ] [ text "-" ]
     , div [ countStyle ] [ text (toString model) ]
-    , button [ onClick (context.enact increment) ] [ text "+" ]
+    , button [ onClick (enact increment) ] [ text "+" ]
     , div [ countStyle ] []
-    , button [ onClick context.removeIt ] [ text "X" ]
+    , button [ onClick context.removeMe ] [ text "X" ]
     ]
 
 
